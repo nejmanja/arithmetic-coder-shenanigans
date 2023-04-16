@@ -26,12 +26,28 @@ def source(symbols, probabilities, amt):
     return symStr
 
 
+# encode incoming message string using 
+def arithmeticCoder(message, symbols, probabilities):
+
+    lo, hi = 0, 1
+    for symb in message:
+        ind = symbols.index(symb)
+        loSum = sum(probabilities[:ind])
+        newLo = lo + (hi - lo)*loSum
+        newHi = lo + (hi - lo)*(loSum + probabilities[ind])
+        lo = newLo
+        hi = newHi
+
+    return (lo, hi)
+
 
 if __name__ == "__main__":
     symbs = list(SYMBMAP.keys())
     probs = list(SYMBMAP.values())
-    srcStr = source(symbs, probs, 50000)
+    message = source(symbs, probs, 10)
     for s in symbs:
-        x = [c for c in srcStr if c == s]
-        print("P({}): {}".format(s, len(x)/len(srcStr)))
+        x = [c for c in message if c == s]
+        print("P({}): {}".format(s, len(x)/len(message)))
+
+    print(arithmeticCoder(message, symbs, probs))
 
