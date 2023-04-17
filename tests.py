@@ -1,4 +1,4 @@
-from main import source, SYMBMAP
+from main import source, arithmeticCoder, arithmeticDecoder, SYMBMAP
 
 def testSrc():
     print("input:{}".format(SYMBMAP))
@@ -11,5 +11,10 @@ def testSrc():
         print("P({}): {}".format(s, len(x)/len(srcStr)))
 
 
+def testArithmCDDC():
+    bits = arithmeticCoder("HELLO", ['H','E','L','O'], [.2, .2, .4, .2])
+    print(arithmeticDecoder(bits, ['H','E','L','O'], [.2, .2, .4, .2]))
+
+
 if __name__ == "__main__":
-    testSrc()
+    testArithmCDDC()
