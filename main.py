@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import random
 import numpy as np
 from math import log2, ceil
 
@@ -29,17 +30,14 @@ def source(symbols, probabilities, amt):
 
 # encode incoming message string using 
 def arithmeticCoder(message, symbols, probabilities):
-
     lo, hi = 0, 1
     for symb in message:
         ind = symbols.index(symb)
         loSum = sum(probabilities[:ind])
-        print(symb + " loSum:{}".format(loSum))
         newLo = lo + (hi - lo)*loSum
         newHi = lo + (hi - lo)*(loSum + probabilities[ind])
         lo = newLo
         hi = newHi
-        print(lo, hi)
 
     # num bits required to code without data loss
     numBits = ceil(log2(1/(hi-lo))) + 1
@@ -56,14 +54,57 @@ def arithmeticCoder(message, symbols, probabilities):
     return bitArray
 
 
+# (3, 1) repetition ECC, repeats each bit 3 times
+def ECCCoder(bitArray):
+    return [b for b in bitArray for _ in range(3)]
+
+
+# channel with a given probability of bit error p
+def channel(bitArray, p):
+    bitsFlipped = 0
+    for i, e in enumerate(bitArray):
+        rand = random.random()
+        # flip a bit with given probability p
+        if rand < p: 
+            bitArray[i] = 1 - e
+            # print("Flipped bit {}!".format(i))
+            bitsFlipped+=1
+    return (bitArray, bitsFlipped)
+
+
+# ECC decoding, majority decision
+def ECCDecoder(bitArray):
+    retArray = []
+    for i in range(0, len(bitArray), 3):
+        checkSum = bitArray[i]+bitArray[i+1]+bitArray[i+2]
+        # if there are 2 or more 1's, it's *probably* a 1 
+        if(checkSum >= 2): retArray.append(1)
+        else: retArray.append(0)
+    
+    return retArray
+
+
 # decode bit-stream created by an arithmetic coder 
-def arithmeticDecoder(bitArray, symbols, probabilities):
+def arithmeticDecoder(bitArray, msgLen, symbols, probabilities):
     value = 0
     # reconstruction of value from bit stream
     for i, b in enumerate(bitArray):
         if b == 1: value += 2**(-i-1)
 
-    return value
+    reconstructedMsg = ""
+
+    lo, hi = 0, 1
+    for i in range(msgLen):
+        hiSum, loSum = 0, 0
+        for j, p in enumerate(probabilities):
+            hiSum += (hi - lo) * p
+            if hiSum + lo >= value:
+                loSum = hiSum - (hi - lo) * p
+                hi = lo + hiSum; lo = lo + loSum
+                reconstructedMsg += symbols[j]
+                break
+    
+    return reconstructedMsg
 
 
 if __name__ == "__main__":
