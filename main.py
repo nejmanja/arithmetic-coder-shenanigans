@@ -148,9 +148,10 @@ if __name__ == "__main__":
     Pe = []
     # for each probability...
     for p in x:
-        numDiff = 0
+        numDiff = []
         # ...for NUM_MSG messages, do NUM_ITER tests, and get the average bit error rate
         for _ in range(NUM_MSG):
+            diff = 0
             # generate message
             message = source(symbs, probs, 10)
             probs = getRealMessageProbs(message, symbs)
@@ -160,13 +161,15 @@ if __name__ == "__main__":
             for _ in range(NUM_ITER):
                 outputBits = channel(eccBits, p)
                 outputBits = ECCDecoder(outputBits)
-                numDiff += compareBitArrays(inputBits, outputBits)
+                diff += compareBitArrays(inputBits, outputBits)
+
+            diff /= (len(inputBits)*NUM_ITER)
+            numDiff.append(diff)
 
         # average number of different bits
-        numDiff /= (NUM_ITER * NUM_MSG)
         # bit error rate for given p
-        numDiff /= len(inputBits)
-        Pe.append(numDiff)
+        diff = sum(numDiff) / NUM_MSG
+        Pe.append(diff)
 
     # plotting
     fig, ax = plt.subplots()
@@ -175,6 +178,11 @@ if __name__ == "__main__":
     # expected values
     y = x**3 + 3*(1-x)*(x**2)
     ax.plot(x, y, color='blue')
+
+    plt.title("Zavisnost Pe od p, NUM_ITER={}, NUM_MSG={}".format(NUM_ITER, NUM_MSG))
+    ax.legend(['eksperimentalne vrednosti', 'teorijske vrednosti'])
+    ax.set_xlabel("p")
+    ax.set_ylabel("Pe")
 
     plt.show()
     
